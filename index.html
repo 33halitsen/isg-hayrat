@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>İSG Akıllı Çalışma Asistanı</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* --- TASARIM STİLLERİ --- */
+
+    /* 1. MOD BUTONLARI GRUBU */
+    .study-mode-container {
+      margin: 10px 0;
+      padding: 5px;
+    }
+
+    .mode-buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .mode-select-btn {
+      padding: 10px 5px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background-color: #e0e0e0;
+      color: #555;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      opacity: 0.7;
+    }
+
+    .mode-select-btn i {
+      font-size: 1.2rem;
+      margin-bottom: 2px;
+    }
+
+    .mode-select-btn.active {
+      opacity: 1;
+      color: white;
+      transform: scale(1.02);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    #btn-mode-all.active {
+      background-color: #3498db;
+    }
+
+    #btn-mode-learning.active {
+      background-color: #e74c3c;
+    }
+
+    #btn-mode-review.active {
+      background-color: #f1c40f;
+      color: #333;
+    }
+
+    #btn-mode-mastered.active {
+      background-color: #2ecc71;
+    }
+
+    [data-theme="dark"] .mode-select-btn {
+      background-color: #333;
+      color: #aaa;
+    }
+
+    [data-theme="dark"] .mode-select-btn.active {
+      color: white;
+    }
+
+    [data-theme="dark"] #btn-mode-review.active {
+      color: #222;
+    }
+
+    /* YENİ: LİSTE SIFIRLAMA BUTONU */
+    .reset-list-container {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .reset-list-btn {
+      background-color: #c0392b;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      width: 100%;
+      display: none;
+      /* Varsayılan gizli */
+      transition: background 0.3s;
+    }
+
+    .reset-list-btn:hover {
+      background-color: #e74c3c;
+    }
+
+
+    /* 2. SORU DURUMU BUTONLARI (Focus Effect) */
+    .status-actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 12px;
+    }
+
+    .status-btn {
+      padding: 12px 18px;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: white;
+      opacity: 0.5;
+      transform: scale(0.95);
+      filter: grayscale(60%);
+      background-color: #7f8c8d;
+    }
+
+    .status-btn:hover {
+      opacity: 0.9;
+      transform: scale(1);
+      filter: grayscale(0%);
+    }
+
+    .status-btn.active {
+      opacity: 1;
+      transform: scale(1.15);
+      filter: grayscale(0%);
+      z-index: 2;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-unknown:hover,
+    .btn-unknown.active {
+      background-color: #e74c3c;
+    }
+
+    .btn-unknown.active {
+      box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+      border-color: white;
+    }
+
+    .btn-review:hover,
+    .btn-review.active {
+      background-color: #f1c40f;
+      color: #333;
+    }
+
+    .btn-review.active {
+      box-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
+      border-color: white;
+      color: #333;
+    }
+
+    .btn-master:hover,
+    .btn-master.active {
+      background-color: #2ecc71;
+    }
+
+    .btn-master.active {
+      box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+      border-color: white;
+    }
+
+    [data-theme="dark"] .status-actions {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme="dark"] .status-btn.active {
+      border-color: #555;
+    }
+
+    /* 3. DİĞERLERİ */
+    .help-btn {
+      background-color: #3498db;
+      color: white;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .help-content {
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .help-section {
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .help-tag {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    [data-theme="dark"] .help-section {
+      border-bottom-color: #444;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="top-nav">
+      <div class="nav-toggle" onclick="toggleNavOptions()">
+        <i class="fas fa-chevron-up" id="navToggleIcon"></i>
+      </div>
+      <div class="theme-toggle" onclick="toggleDarkMode()">
+        <i class="fas fa-moon" id="themeIcon"></i>
+      </div>
+
+      <div class="nav-options" id="navOptions">
+        <button class="help-btn" onclick="showHelpModal()"><i class="fas fa-info-circle"></i> Sistem Nasıl
+          Kullanılır?</button>
+        <button onclick="showTermSelection()">Dönem Değiştir</button>
+
+        <div class="study-mode-container">
+          <label><i class="fas fa-filter"></i> <strong>Çalışma Modu Seç:</strong></label>
+          <div class="mode-buttons-grid">
+            <button class="mode-select-btn" id="btn-mode-all" onclick="changeStudyMode('all')">
+              <i class="fas fa-globe"></i> Tümü
+            </button>
+            <button class="mode-select-btn" id="btn-mode-learning" onclick="changeStudyMode('learning')">
+              <i class="fas fa-brain"></i> Çalışılacaklar
+            </button>
+            <button class="mode-select-btn" id="btn-mode-review" onclick="changeStudyMode('review')">
+              <i class="fas fa-clock-rotate-left"></i> Tekrar Et
+            </button>
+            <button class="mode-select-btn" id="btn-mode-mastered" onclick="changeStudyMode('mastered')">
+              <i class="fas fa-check-double"></i> Öğrenilenler
+            </button>
+          </div>
+          <div class="reset-list-container">
+            <button id="resetListBtn" class="reset-list-btn" onclick="resetCurrentList()">
+              <i class="fas fa-trash-alt"></i> Listeyi Temizle
+            </button>
+          </div>
+        </div>
+
+        <div class="goto-container" id="gotoContainer">
+          <label>Soruya git: <input type="number" id="gotoQuestion" min="1" /></label>
+          <button onclick="goToQuestion()">Git</button>
+          <div class="quick-goto-buttons"></div>
+        </div>
+        <div class="font-size-controls">
+          <button onclick="adjustFontSize(-1)">A-</button>
+          <button onclick="resetFontSize()">Reset</button>
+          <button onclick="adjustFontSize(1)">A+</button>
+        </div>
+        <span id="infoText" style="font-size: 0.85rem; color: #666; margin-top: 5px; display:block;">İpucu: Yanlış
+          yaparsan doğru cevap otomatik gösterilir.</span><br>
+        <div id="showCorrectContainer">
+          <label><input type="checkbox" id="showCorrectAlways" onchange="toggleCorrectImmediately()" /> Doğru cevabı her
+            zaman göster</label><br>
+        </div>
+        <label><input type="checkbox" id="challengeMode" onchange="toggleChallengeMode()" /> Challenge Mode</label><br>
+        <label><input type="checkbox" id="shuffleMode" onchange="toggleShuffleInputs()" /> Karıştırma modu</label>
+        <span id="shuffleInputs">
+          <div>
+            <label>Baş:</label>
+            <input type="number" id="shuffleStart" placeholder="1" min="1" onchange="saveAllSettings()" />
+            <label>Bitiş:</label>
+            <input type="number" id="shuffleEnd" placeholder="800" min="1" onchange="saveAllSettings()" />
+            <button onclick="shuffleQuestions()">Karıştır</button>
+          </div>
+          <div class="quick-range-buttons"></div>
+        </span>
+      </div>
+      <div id="progress"></div>
+      <div id="stats" style="display: none;">
+        <span class="stat-item"><span class="stat-label">D:</span> <span id="correctCount">0</span></span>
+        <span class="stat-item"><span class="stat-label">Y:</span> <span id="wrongCount">0</span></span>
+        <span class="stat-item"><span class="stat-label">B:</span> <span id="emptyCount">0</span></span>
+        <span class="stat-item"><span class="stat-label">Combo:</span> <span id="comboCount">0x</span></span>
+        <span class="stat-item"><span class="stat-label">Max:</span> <span id="maxCombo">0x</span></span>
+        <button class="stats-reset" onclick="resetStats()">Reset</button>
+      </div>
+    </div>
+
+    <div id="questionBox">
+      <h2 id="questionText"></h2>
+      <div class="options" id="options"></div>
+
+      <div class="status-actions" id="statusActions">
+        <button class="status-btn btn-unknown" onclick="setQuestionStatus(0)">
+          <i class="fas fa-times-circle"></i> Bilmiyorum
+        </button>
+        <button class="status-btn btn-review" onclick="setQuestionStatus(1)">
+          <i class="fas fa-exclamation-circle"></i> Tekrar Et
+        </button>
+        <button class="status-btn btn-master" onclick="setQuestionStatus(2)">
+          <i class="fas fa-check-circle"></i> Öğrendim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="prevQuestion()">Önceki</button>
+    <button onclick="nextQuestion()">Sonraki</button>
+  </div>
+
+  <div class="bottomInfo">
+    <div class="social-links">
+      <a href="https://www.linkedin.com/in/huseyincengiz321" target="_blank" class="social-icon"><i
+          class="fa-brands fa-linkedin"></i></a>
+      <a href="mailto:huseyin321cengiz@gmail.com" class="social-icon"><i class="fas fa-envelope"></i></a>
+      <a href="https://instagram.com/cengiz.py" target="_blank" class="social-icon"><i class="fab fa-instagram"></i></a>
+    </div>
+    <div class="designer">Designed by H.Cengiz</div>
+  </div>
+
+  <div id="selectionModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeModalBtn">&times;</span>
+      <h3>Lütfen bir dönem seçin</h3>
+      <p>Çalışmak istediğiniz soru kaynağını seçiniz:</p>
+      <div class="modal-buttons">
+        <button id="selectTerm1">1. Dönem</button>
+        <button id="selectTerm2">2. Dönem</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal">
+    <div class="modal-content help-content">
+      <span class="close-btn" onclick="closeHelpModal()">&times;</span>
+      <h3><i class="fas fa-book-reader"></i> Nasıl Kullanılır?</h3>
+
+      <div class="help-section">
+        <h4>1. Çalışma Modları (Üst Menü)</h4>
+        <p><strong>Mavi (Tümü):</strong> Orijinal liste, filtre yok.</p>
+        <p><strong>Kırmızı (Çalışılacaklar):</strong> Esas çalışma alanınız. Henüz "Öğrendim" (Yeşil) dedikleriniz
+          buraya gelmez.</p>
+        <p><strong>Sarı (Tekrar):</strong> Sadece "Tekrar Et" (Sarı) olarak işaretlediğiniz sorular.</p>
+        <p><strong>Yeşil (Öğrenilenler):</strong> Artık bildiğiniz soruların arşividir.</p>
+      </div>
+
+      <div class="help-section">
+        <h4>2. Soru Durumu (Alt Butonlar)</h4>
+        <p>Her sorunun altında durumunu belirleyin:</p>
+        <p><span class="help-tag" style="background:#e74c3c; color:white">Bilmiyorum</span> : Soru havuzda kalır
+          (Varsayılan).</p>
+        <p><span class="help-tag" style="background:#f1c40f; color:#333">Tekrar Et</span> : Tekrar listesine ekler.</p>
+        <p><span class="help-tag" style="background:#2ecc71; color:white">Öğrendim</span> : Çalışma listesinden çıkarır.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
