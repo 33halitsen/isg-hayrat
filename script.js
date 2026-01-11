@@ -298,7 +298,7 @@ function resetCurrentList() {
   if (changed) {
     saveQuestionStatus();
     alert("Liste başarıyla temizlendi.");
-    generateActiveList(true);
+    generateActiveList(false, true); // Listeyi sıfırladığımız için yeniden karıştır/oluştur
   } else {
     alert("Listede silinecek veri bulunamadı.");
   }
@@ -310,18 +310,23 @@ function changeStudyMode(newMode) {
   localStorage.setItem('studyMode', currentStudyMode);
   updateStudyModeVisuals();
   updateResetButtonVisibility();
-  generateActiveList(true);
+  generateActiveList(false, true); // Mod değiştiğinde yeni liste oluştur
 }
 
-function generateActiveList(resetToSavedPosition = false) {
+// *** GÜNCELLENEN FONKSİYON ***
+// resetToSavedPosition: Kaldığımız sorudan devam edelim mi? (Sayfa yenilendiğinde true olur)
+// forceNewShuffle: Mevcut karışık listeyi yoksayıp zorla yeniden karıştıralım mı? (Butona basınca true olur)
+function generateActiveList(resetToSavedPosition = false, forceNewShuffle = false) {
   let filtered = [];
+  
+  // 1. Önce soruları filtreleyelim
   questions.forEach((q, index) => {
     const status = getQuestionStatus(q.id);
     let include = false;
 
     switch (currentStudyMode) {
       case 'all': include = true; break;
-      case 'learning': include = (status === 0); break; // SADECE 0. SARI VE YEŞİL YOK.
+      case 'learning': include = (status === 0); break;
       case 'review': include = (status === 1); break;
       case 'mastered': include = (status === 2); break;
     }
@@ -340,9 +345,33 @@ function generateActiveList(resetToSavedPosition = false) {
     }
   });
 
+  // 2. Sıralama İşlemi (Karışık veya Sıralı)
   if (document.getElementById('shuffleMode').checked) {
-    activeIndexes = filtered.sort(() => Math.random() - 0.5);
+    const start = document.getElementById('shuffleStart').value;
+    const end = document.getElementById('shuffleEnd').value;
+    // Benzersiz bir anahtar oluşturuyoruz ki her modun listesi ayrı saklansın
+    const storageListKey = `savedList_Term${selectedTerm}_${currentStudyMode}_${start}_${end}`;
+    
+    if (forceNewShuffle) {
+      // Zorla yeniden karıştır denildiyse (Shuffle butonuna basıldıysa)
+      activeIndexes = filtered.sort(() => Math.random() - 0.5);
+      localStorage.setItem(storageListKey, JSON.stringify(activeIndexes));
+    } else {
+      // Sayfa yenilendiyse: Önce kayıtlı liste var mı diye bak
+      const savedListStr = localStorage.getItem(storageListKey);
+      if (savedListStr) {
+        activeIndexes = JSON.parse(savedListStr);
+        // Güvenlik kontrolü: Kayıtlı listedeki indexler hala geçerli mi? (Filtre değişmiş olabilir mi?)
+        // Basit bir kontrol olarak uzunluklara bakabiliriz veya hata riskini göze alabiliriz.
+        // Eğer sorular yüklenmediyse bu sorun çıkarabilir ama loadData çağrıldıktan sonra burası çalıştığı için sorun olmamalı.
+      } else {
+        // Kayıt yoksa mecbur karıştır
+        activeIndexes = filtered.sort(() => Math.random() - 0.5);
+        localStorage.setItem(storageListKey, JSON.stringify(activeIndexes));
+      }
+    }
   } else {
+    // Normal sıralı mod
     activeIndexes = filtered.sort((a, b) => a - b);
   }
 
@@ -416,7 +445,8 @@ async function loadData() {
     updateStats();
 
     loadQuestionStatus();
-    generateActiveList(true);
+    // Sayfa ilk yüklendiğinde: Pozisyonu hatırla (true), yeni karıştırma YAPMA (false)
+    generateActiveList(true, false); 
 
   } catch (error) {
     showError(`Yükleme hatası: ${error.message}`);
@@ -494,6 +524,13 @@ function showQuestion() {
 
   const qIndex = activeIndexes[currentIndex];
   const q = questions[qIndex];
+  
+  // Hata koruması: Eğer q undefined ise liste bozulmuş demektir, listeyi yenile
+  if (!q) {
+      console.warn("Index hatası tespit edildi, liste yenileniyor.");
+      generateActiveList(false, true);
+      return;
+  }
 
   const status = getQuestionStatus(q.id);
   updateStatusButtons(status);
@@ -632,8 +669,10 @@ function setRange(start, end) {
   shuffleQuestions();
 }
 
+// *** GÜNCELLENEN FONKSİYON ***
 function shuffleQuestions() {
-  generateActiveList();
+  // Kullanıcı manuel olarak "Karıştır" dediğinde forceNewShuffle = true yapıyoruz.
+  generateActiveList(false, true);
   adjustNavOptionsHeight();
   saveAllSettings();
 }
@@ -642,7 +681,8 @@ function toggleShuffleInputs() {
   const checked = document.getElementById('shuffleMode').checked;
   document.getElementById('shuffleInputs').style.display = checked ? 'block' : 'none';
   document.getElementById('gotoContainer').style.display = checked ? 'none' : 'inline-block';
-  generateActiveList();
+  // Mod değiştiğinde yeni liste oluşturmak mantıklı (force = true)
+  generateActiveList(false, true);
   adjustNavOptionsHeight();
   saveAllSettings();
 }
@@ -656,7 +696,12 @@ function adjustNavOptionsHeight() {
 function updateProgress() {
   const total = activeIndexes.length;
   const index = currentIndex + 1;
-  document.getElementById('progress').innerText = `Soru: ${index} / ${total} (${questions[activeIndexes[currentIndex]].num})`;
+  // Güvenlik kontrolü
+  if(activeIndexes[currentIndex] !== undefined && questions[activeIndexes[currentIndex]]) {
+      document.getElementById('progress').innerText = `Soru: ${index} / ${total} (${questions[activeIndexes[currentIndex]].num})`;
+  } else {
+      document.getElementById('progress').innerText = `Soru: ${index} / ${total}`;
+  }
 }
 
 function updateStats() {
