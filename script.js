@@ -164,10 +164,9 @@ function loadAllSettings() {
 
   if (savedShuffleMode) {
     document.getElementById('shuffleMode').checked = true;
-    document.getElementById('shuffleInputs').style.display = 'block'; // Kalıcı görünürlük
+    document.getElementById('shuffleInputs').style.display = 'block';
     document.getElementById('gotoContainer').style.display = 'none';
 
-    // YENİ: Kaydedilmiş aralığı geri yükle
     const savedStart = localStorage.getItem('shuffleStart');
     const savedEnd = localStorage.getItem('shuffleEnd');
     if (savedStart) document.getElementById('shuffleStart').value = savedStart;
@@ -196,7 +195,7 @@ function loadAllSettings() {
     currentStudyMode = savedStudyMode;
   }
   updateStudyModeVisuals();
-  updateResetButtonVisibility(); // Reset butonu durumunu güncelle
+  updateResetButtonVisibility();
 
   const savedTerm = localStorage.getItem('selectedTerm');
   if (savedTerm) {
@@ -278,7 +277,6 @@ function resetCurrentList() {
 
   if (!confirm(confirmMsg)) return;
 
-  // Sıfırlama Mantığı
   const keys = Object.keys(questionStatusMap);
   let changed = false;
 
@@ -286,15 +284,12 @@ function resetCurrentList() {
     const status = questionStatusMap[id];
 
     if (currentStudyMode === 'learning') {
-      // Her şeyi sil
       delete questionStatusMap[id];
       changed = true;
     } else if (currentStudyMode === 'review' && status === 1) {
-      // Sadece tekrarları sil (0 yap)
-      questionStatusMap[id] = 0; // veya delete questionStatusMap[id];
+      questionStatusMap[id] = 0;
       changed = true;
     } else if (currentStudyMode === 'mastered' && status === 2) {
-      // Sadece öğrenilenleri sil (0 yap)
       questionStatusMap[id] = 0;
       changed = true;
     }
@@ -326,7 +321,7 @@ function generateActiveList(resetToSavedPosition = false) {
 
     switch (currentStudyMode) {
       case 'all': include = true; break;
-      case 'learning': include = (status === 0 || status === 1); break;
+      case 'learning': include = (status === 0); break; // SADECE 0. SARI VE YEŞİL YOK.
       case 'review': include = (status === 1); break;
       case 'mastered': include = (status === 2); break;
     }
@@ -389,7 +384,6 @@ function saveAllSettings() {
   localStorage.setItem('fontSize', currentFontSize.toString());
   localStorage.setItem('stats', JSON.stringify(stats));
 
-  // YENİ: Shuffle Aralıklarını Kaydet
   localStorage.setItem('shuffleStart', document.getElementById('shuffleStart').value);
   localStorage.setItem('shuffleEnd', document.getElementById('shuffleEnd').value);
 }
