@@ -84,7 +84,7 @@
       color: #222;
     }
 
-    /* YENİ: LİSTE SIFIRLAMA BUTONU */
+    /* LİSTE SIFIRLAMA BUTONU */
     .reset-list-container {
       margin-top: 10px;
       text-align: center;
@@ -100,7 +100,6 @@
       font-size: 0.85rem;
       width: 100%;
       display: none;
-      /* Varsayılan gizli */
       transition: background 0.3s;
     }
 
@@ -360,21 +359,22 @@
 
       <div class="help-section">
         <h4>1. Çalışma Modları (Üst Menü)</h4>
-        <p><strong>Mavi (Tümü):</strong> Orijinal liste, filtre yok.</p>
-        <p><strong>Kırmızı (Çalışılacaklar):</strong> Esas çalışma alanınız. Henüz "Öğrendim" (Yeşil) dedikleriniz
-          buraya gelmez.</p>
-        <p><strong>Sarı (Tekrar):</strong> Sadece "Tekrar Et" (Sarı) olarak işaretlediğiniz sorular.</p>
-        <p><strong>Yeşil (Öğrenilenler):</strong> Artık bildiğiniz soruların arşividir.</p>
+        <p><strong>Mavi (Tümü):</strong> Hiçbir filtre yok, tüm sorular.</p>
+        <p><strong>Kırmızı (Çalışılacaklar):</strong> Esas çalışma alanınız. <u>Sadece</u> durumu "Bilmiyorum" olanlar.
+          "Tekrar" veya "Öğrendim" dedikleriniz buradan çıkar.</p>
+        <p><strong>Sarı (Tekrar):</strong> <u>Sadece</u> "Tekrar Et" dediğiniz sorular.</p>
+        <p><strong>Yeşil (Öğrenilenler):</strong> <u>Sadece</u> "Öğrendim" dediklerinizin arşivi.</p>
       </div>
 
       <div class="help-section">
         <h4>2. Soru Durumu (Alt Butonlar)</h4>
-        <p>Her sorunun altında durumunu belirleyin:</p>
-        <p><span class="help-tag" style="background:#e74c3c; color:white">Bilmiyorum</span> : Soru havuzda kalır
-          (Varsayılan).</p>
-        <p><span class="help-tag" style="background:#f1c40f; color:#333">Tekrar Et</span> : Tekrar listesine ekler.</p>
-        <p><span class="help-tag" style="background:#2ecc71; color:white">Öğrendim</span> : Çalışma listesinden çıkarır.
-        </p>
+        <p>Soruyu çözerken durumunu değiştirebilirsiniz:</p>
+        <p><span class="help-tag" style="background:#e74c3c; color:white">Bilmiyorum</span> : Soru "Çalışılacaklar"
+          listesinde kalır.</p>
+        <p><span class="help-tag" style="background:#f1c40f; color:#333">Tekrar Et</span> : Soru "Çalışılacaklar"dan
+          çıkar, "Tekrar" listesine gider.</p>
+        <p><span class="help-tag" style="background:#2ecc71; color:white">Öğrendim</span> : Soru "Çalışılacaklar"dan
+          çıkar, "Öğrenilenler"e gider.</p>
       </div>
     </div>
   </div>
